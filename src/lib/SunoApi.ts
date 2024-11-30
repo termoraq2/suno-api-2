@@ -89,9 +89,14 @@ class SunoApi {
    */
   private async getAuthToken() {
     // URL to get session ID
-    const getSessionUrl = `${SunoApi.CLERK_BASE_URL}/v1/client?_clerk_js_version=${this.clerkVersion}`;
+   // const getSessionUrl = `${SunoApi.CLERK_BASE_URL}/v1/client?_clerk_js_version=${this.clerkVersion}`;
+    const getSessionUrl = 'https://clerk.suno.com/v1/client?__clerk_api_version=2021-02-05&_clerk_js_version=5.35.1&_method=PATCH';
     // Get session ID
+
     const sessionResponse = await this.client.get(getSessionUrl);
+
+
+    
     if (!sessionResponse?.data?.response?.['last_active_session_id']) {
       throw new Error(
         'Failed to get session id, you may need to update the SUNO_COOKIE'
@@ -110,16 +115,25 @@ class SunoApi {
       throw new Error('Session ID is not set. Cannot renew token.');
     }
     // URL to renew session token
-    const renewUrl = `${SunoApi.CLERK_BASE_URL}/v1/client/sessions/${this.sid}/tokens?_clerk_js_version==${this.clerkVersion}`;
+    //const renewUrl = `${SunoApi.CLERK_BASE_URL}/v1/client/sessions/${this.sid}/tokens?_clerk_js_version==${this.clerkVersion}`;
+     const renewUrl = 'https://clerk.suno.com/v1/client?__clerk_api_version=2021-02-05&_clerk_js_version=5.35.1&_method=PATCH';
     // Renew session token
     const renewResponse = await this.client.post(renewUrl);
     logger.info('KeepAlive...\n');
     if (isWait) {
       await sleep(1, 2);
     }
-    const newToken = renewResponse.data['jwt'];
+    //const newToken = renewResponse.data['jwt'];
+
     // Update Authorization field in request header with the new JWT token
-    this.currentToken = newToken;
+    
+if (renewResponse.data.sessions) {
+  const activeSession = renewResponse.data.sessions.find(
+    (session: { status: string; }) => session.status === 'active'
+  );
+  const newToken = activeSession?.last_active_token?.jwt;
+  this.currentToken = newToken;
+}
   }
 
   /**
