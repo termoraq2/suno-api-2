@@ -80,30 +80,35 @@ class SunoApi {
       );
     }
     // Save clerk version ID for auth
-    this.clerkVersion = versionListResponse?.data?.['tags']['latest'];
-    this.clerkVersion = "5.34.1";
+    // this.clerkVersion = versionListResponse?.data?.['tags']['latest'];
+    // Use a Clerk version released before fraud detection was implemented
+    this.clerkVersion = "5.34.0";
   }
 
   /**
    * Get the session ID and save it for later use.
    */
   private async getAuthToken() {
-    // URL to get session ID
-   // const getSessionUrl = `${SunoApi.CLERK_BASE_URL}/v1/client?_clerk_js_version=${this.clerkVersion}`;
-    const getSessionUrl = 'https://clerk.suno.com/v1/client?__clerk_api_version=2021-02-05&_clerk_js_version=5.35.1&_method=PATCH';
-    // Get session ID
-
-    const sessionResponse = await this.client.get(getSessionUrl);
-
-
-    
-    if (!sessionResponse?.data?.response?.['last_active_session_id']) {
-      throw new Error(
-        'Failed to get session id, you may need to update the SUNO_COOKIE'
-      );
+    try {
+      // Replace with the correct URL for your Express API
+      const response = await axios.get('http://85.106.209.153:3000/api/getJwt');
+  
+      if (response.status === 200) {
+        const { success, jwt, sesId } = response.data;
+  
+        if (success) {
+          
+          console.log('Session ID:', sesId);
+          this.sid = sesId;
+        } else {
+          
+        }
+      } else {
+        
+      }
+    } catch (error) {
+      
     }
-    // Save session ID for later use
-    this.sid = sessionResponse.data.response['last_active_session_id'];
   }
 
   /**
@@ -112,28 +117,19 @@ class SunoApi {
    */
   public async keepAlive(isWait?: boolean): Promise<void> {
     if (!this.sid) {
-      throw new Error('Session ID is not set. Cannot renew token.');
+    //  throw new Error('Session ID is not set. Cannot renew token.');
     }
     // URL to renew session token
-    //const renewUrl = `${SunoApi.CLERK_BASE_URL}/v1/client/sessions/${this.sid}/tokens?_clerk_js_version==${this.clerkVersion}`;
-     const renewUrl = 'https://clerk.suno.com/v1/client?__clerk_api_version=2021-02-05&_clerk_js_version=5.35.1&_method=PATCH';
+   // const renewUrl = `${SunoApi.CLERK_BASE_URL}/v1/client/sessions/${this.sid}/tokens?_clerk_js_version==${this.clerkVersion}`;
     // Renew session token
-    const renewResponse = await this.client.post(renewUrl);
+    const renewResponse = await axios.get('http://85.106.209.153:3000/api/getJwt');
     logger.info('KeepAlive...\n');
     if (isWait) {
       await sleep(1, 2);
     }
-    //const newToken = renewResponse.data['jwt'];
-
+    const newToken = renewResponse.data['jwt'];
     // Update Authorization field in request header with the new JWT token
-    
-if (renewResponse.data.sessions) {
-  const activeSession = renewResponse.data.sessions.find(
-    (session: { status: string; }) => session.status === 'active'
-  );
-  const newToken = activeSession?.last_active_token?.jwt;
-  this.currentToken = newToken;
-}
+    this.currentToken = newToken;
   }
 
   /**
