@@ -91,7 +91,7 @@ class SunoApi {
   private async getAuthToken() {
     try {
       // Replace with the correct URL for your Express API
-      const response = await axios.get('http://85.106.255.210:3000/api/getJwt');
+      const response = await axios.get('http://85.108.238.157:3000/api/getJwt');
   
       if (response.status === 200) {
         const { success, jwt, sesId } = response.data;
@@ -122,7 +122,7 @@ class SunoApi {
     // URL to renew session token
    // const renewUrl = `${SunoApi.CLERK_BASE_URL}/v1/client/sessions/${this.sid}/tokens?_clerk_js_version==${this.clerkVersion}`;
     // Renew session token
-    const renewResponse = await axios.get('http://85.106.255.210:3000/api/getJwt');
+    const renewResponse = await axios.get('http://85.108.238.157:3000/api/getJwt');
     logger.info('KeepAlive...\n');
     if (isWait) {
       await sleep(1, 2);
